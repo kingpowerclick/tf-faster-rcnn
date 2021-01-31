@@ -50,6 +50,7 @@ dependencies:
   - tensorflow-base=2.0.0=gpu_py37h0ec5d1f_0
   - tensorflow-estimator=2.0.0=pyh2649769_0
   - tensorflow-gpu=2.0.0=h0d30ee6_0
+  - keras
   - termcolor=1.1.0=py37_1
   - tk=8.6.8=hbc83047_0
   - werkzeug=0.16.0=py_0

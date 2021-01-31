@@ -1,6 +1,7 @@
 import tensorflow as tf
 import math
 from utils import bbox_utils
+from keras import backend as K
 
 RPN = {
     "vgg16": {
@@ -175,6 +176,7 @@ def frcnn_cls_loss(*args):
     y_true, y_pred = args if len(args) == 2 else args[0]
     loss_fn = tf.losses.CategoricalCrossentropy(reduction=tf.losses.Reduction.NONE)
     loss_for_all = loss_fn(y_true, y_pred)
+    loss_for_all = loss_for_all + ring_loss(y_true, y_pred)
     #
     cond = tf.reduce_any(tf.not_equal(y_true, tf.constant(0.0)), axis=-1)
     mask = tf.cast(cond, dtype=tf.float32)
@@ -223,3 +225,17 @@ def reg_loss(*args):
     loc_loss = tf.reduce_sum(pos_mask * loss_for_all)
     total_pos_bboxes = tf.maximum(1.0, tf.reduce_sum(pos_mask))
     return loc_loss / total_pos_bboxes
+
+def ring_loss(y_true,y_pred):
+    knownsMinimumMag = tf.ones(y_pred[0])*50
+    lossweight = 0.0001
+    pred=K.sqrt(K.sum(K.square(y_pred),axis=1))
+    error=K.mean(K.square(
+        # Loss for Knowns having magnitude greater than knownsMinimumMag
+        y_true[:,0]*(K.maximum(knownsMinimumMag-pred,0.))
+        # Add two losses
+        +
+        # Loss for unKnowns having magnitude greater than unknownsMaximumMag
+        y_true[:,1]*pred
+    ))
+    return error*lossweight
